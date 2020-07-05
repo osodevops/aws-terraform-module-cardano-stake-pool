@@ -1,0 +1,47 @@
+# absolute path to Ansible directory on virtual machine
+ANSIBLE_PATH_ON_VM = File.join('/home/vagrant/ansible')
+LOCAL_REPO_PROVISION_DIR = './provisioners/'
+REMOTE_PROVISIONING_PATH = '/home/vagrant/provisioners'
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/amazonlinux-2"
+  config.vm.box_version = "1.1.0"
+  config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
+  config.vm.network "forwarded_port", guest: 3001, host: 3001
+  config.vm.hostname = "cardano-node"
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "cardano-node"
+    vb.cpus = 2
+    vb.gui = false
+    vb.memory = 4096
+  end
+  # https://sakamata.hateblo.jp/entry/2019/06/24/123601
+  if Vagrant.has_plugin?("vagrant-vbguest")
+    config.vbguest.auto_update = false
+  end
+  # Sharing the provisioning scripts to run Ansible locally like Packer.
+  #config.vm.synced_folder LOCAL_REPO_PROVISION_DIR, REMOTE_PROVISIONING_PATH
+
+
+  # PROVISIONERS
+  config.vm.provision :shell, :path => "./provisioners/scripts/package_update.sh"
+  config.vm.provision :shell, :path => "./provisioners/scripts/install_python3.sh"
+  config.vm.provision :shell, :path => "./provisioners/scripts/install_ansible.sh"
+  config.vm.provision :shell, :path => "./provisioners/scripts/install_awscli.sh"
+  config.vm.provision :shell, :path => "./provisioners/scripts/install_aws_ssm.sh"
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.version = "2.9.10"
+    ansible.become = true
+    ansible.galaxy_role_file = 'provisioners/ansible/requirements.yml'
+    ansible.playbook = 'provisioners/ansible/cardano-node.yml'
+    ansible.verbose = "-vv"
+  end
+
+  config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/me.pub"
+  config.vm.provision "shell", inline: <<-SHELL
+    cat /home/vagrant/.ssh/me.pub >> /home/vagrant/.ssh/authorized_keys
+  SHELL
+
+end

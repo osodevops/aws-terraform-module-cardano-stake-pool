@@ -1,0 +1,9 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+  vars:
+    # Cordano build tag
+    cardano_version_tag: "tags/1.14.2"
+  roles:
+    - role: sionsmith.cardano_node

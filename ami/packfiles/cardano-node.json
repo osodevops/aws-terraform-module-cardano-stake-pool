@@ -1,0 +1,86 @@
+{
+  "variables": {
+    "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+    "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+    "aws_session_token": "{{env `AWS_SESSION_TOKEN`}}",
+    "build_number": "{{env `BUILD_NUMBER`}}",
+    "build_initiator": "{{env `BUILD_INITIATOR`}}",
+    "packer_build_vpc_id": "{{env `PACKER_BUILD_VPC_ID`}}",
+    "packer_build_subnet_id": "{{env `PACKER_BUILD_SUBNET_ID`}}",
+    "ec2_instance_type": "{{env `EC2_INSTANCE_TYPE`}}",
+    "iam_instance_profile": "{{env `iam_instance_profile`}}",
+    "root_volume_size": "{{env `root_volume_size`}}"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `aws_access_key`}}",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "token": "{{user `aws_session_token`}}",
+      "region": "eu-west-2",
+      "instance_type": "t3a.large",
+      "iam_instance_profile": "{{user `iam_instance_profile`}}",
+      "ami_name": "CARDANO-NODE-{{timestamp}}-AMI",
+      "ami_description": "Cardano Node AMI",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "amzn2-ami-hvm-*.*.*.*-*-gp2",
+          "root-device-type": "ebs",
+          "architecture": "x86_64"
+        },
+        "owners": ["amazon"],
+        "most_recent": true
+      },
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/xvda",
+          "volume_size": "{{user `root_volume_size`}}",
+          "volume_type": "gp2",
+          "delete_on_termination": true
+        }
+      ],
+      "ssh_username": "ec2-user",
+      "ami_virtualization_type": "hvm",
+      "ami_users": "{{ user `ami_users` }}",
+      "temporary_key_pair_name": "tableau-packer-{{timestamp}}",
+      "vpc_id": "{{user `packer_build_vpc_id`}}",
+      "subnet_id": "{{user `packer_build_subnet_id`}}",
+      "associate_public_ip_address": true,
+      "run_tags": {
+        "Name": "cardano-as-packer",
+        "Application": "cardano-node"
+      },
+      "tags": {
+        "Name": "CARDANO-NODE-{{timestamp}}-AMI",
+        "OS_Version": "AmazonLinux2",
+        "ApprovedBy": "{{user `build_initiator`}}",
+        "Version": "{{user `build_number`}}",
+        "Application": "Cardano Node Image",
+        "Runner": "EC2"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell", "script": "ami/provisioners/scripts/package_update.sh"
+    },
+    {
+      "type": "shell", "script": "ami/provisioners/scripts/install_python3.sh"
+    },
+    {
+      "type": "shell", "script": "ami/provisioners/scripts/install_ansible.sh"
+    },
+    {
+      "type": "shell", "script": "ami/provisioners/scripts/install_awscli.sh"
+    },
+    {
+      "type": "shell", "script": "ami/provisioners/scripts/install_aws_ssm.sh"
+    },
+    {
+      "type": "ansible-local",
+      "galaxy_file": "ami/provisioners/ansible/requirements.yml",
+      "playbook_file": "ami/provisioners/ansible/cardano-node.yml"
+    }
+  ]
+}

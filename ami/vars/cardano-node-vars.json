@@ -1,0 +1,8 @@
+{
+    "ec2_instance_type": "t3.small",
+    "root_volume_size": "40",
+    "packer_build_vpc_id": "vpc-xxxxxxx",
+    "packer_build_subnet_id": "subnet-xxxxxx",
+    "ami_users":"xxxxxxx",
+    "iam_instance_profile": "CODEBUILD-PACKER-IAM-PROFILE"
+}
