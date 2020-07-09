@@ -29,8 +29,8 @@ variable "environment" {
   type = string
 }
 
-variable "core_node_ip" {
-  type = string
+variable "relay_nodes" {
+  type = map(string)
 }
 
 variable "common_tags" {
@@ -38,19 +38,19 @@ variable "common_tags" {
 }
 
 
-variable "relay_node_port" {
-  description = "External port number to run relay node on."
+variable "core_node_port" {
+  description = "External port number to run core node on."
   type = string
 }
 
-variable "relay_root_disk_size" {
+variable "core_root_disk_size" {
   description = "Size of the root volume in GB's"
   type = number
   default = 40
 }
 
 locals {
-  log_path            = "/opt/cardano/cnode/logs"
-  parameter_prefix    = "/${var.environment}"
-  ami_name            = "CARDANO-NODE-*"
+  log_path          = "/opt/cardano/cnode/logs"
+  parameter_prefix  = "/${var.environment}"
+  ami_name          = "CARDANO-NODE-*"
 }
