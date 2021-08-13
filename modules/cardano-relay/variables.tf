@@ -1,5 +1,12 @@
 variable "ami_owner_account" {
-  type = string
+  description = "Account owning the cardano ami"
+  type        = string
+  default     = ""
+}
+
+variable "vpc_name" {
+  description = "Name of the VPC used for this deployment"
+  type        = string
 }
 
 variable "asg_min_size" {

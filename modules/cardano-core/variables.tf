@@ -49,6 +49,10 @@ variable "core_root_disk_size" {
   default = 40
 }
 
+variable "vpc_name" {
+  description = "Name of the VPC we are deploying to"
+  type        = string
+}
 
 variable "node_security_group_id" {
   description = "ID of the SG defined by the security-groups module"
