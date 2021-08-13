@@ -38,8 +38,12 @@ resource "aws_autoscaling_group" "core_node" {
     create_before_destroy = true
   }
 
-  tags = flatten(["${data.null_data_source.asg_tags.*.outputs}",
-    map("key", "Name", "value", "${upper(var.environment)}-CORE-NODE-EC2-ASG", "propagate_at_launch", true),
-    map("key", "AWSInspectorEnabled", "value", "true", "propagate_at_launch", true)
+  tags = concat(
+    null_resource.asg_tags.*.triggers,
+    [
+      { key : "Name", value : "cardano-${var.environment}-core-node", propagate_at_launch : true },
+      { key : "Environment", value : var.environment, propagate_at_launch : true },
+      { key : "Node", value : "core", propagate_at_launch : true },
+      { key : "AWSInspectorEnabled", value : "true", propagate_at_launch : true }
   ])
 }
