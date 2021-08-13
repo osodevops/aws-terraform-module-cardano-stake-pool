@@ -65,7 +65,8 @@ variable "node_security_group_id" {
 }
 
 locals {
-  log_path            = "/opt/cardano/cnode/logs"
-  parameter_prefix    = "/${var.environment}"
-  ami_name            = "CARDANO-NODE-*"
+  log_path         = "/opt/cardano/cnode/logs"
+  parameter_prefix = "/${var.environment}"
+  ami_name         = "CARDANO-NODE-*"
+  ami_owner        = var.ami_owner_account != "" ? var.ami_owner_account : data.aws_caller_identity.current.account_id
 }

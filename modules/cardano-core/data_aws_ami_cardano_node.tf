@@ -5,6 +5,5 @@ data "aws_ami" "cardano_node" {
     name   = "name"
     values = [local.ami_name]
   }
-
-  owners = [var.ami_owner_account]
+  owners = [local.ami_owner]
 }
