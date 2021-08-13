@@ -49,6 +49,11 @@ variable "relay_root_disk_size" {
   default = 40
 }
 
+variable "node_security_group_id" {
+  description = "ID of the SG defined by the security-groups module"
+  type        = string
+}
+
 locals {
   log_path            = "/opt/cardano/cnode/logs"
   parameter_prefix    = "/${var.environment}"

@@ -3,7 +3,7 @@ resource "aws_launch_configuration" "relay_launch_config" {
   image_id                    = data.aws_ami.cardano_node.id
   instance_type               = var.ec2_instance_type
   iam_instance_profile        = aws_iam_instance_profile.relay_node_profile.name
-  security_groups             = [aws_security_group.relay_sg.id]
+  security_groups             = [var.node_security_group_id]
   associate_public_ip_address = true
   key_name                    = var.ec2_key_name
   user_data                   = data.template_file.relay_user_data.rendered
