@@ -6,7 +6,16 @@ resource "aws_launch_configuration" "relay_launch_config" {
   security_groups             = [var.node_security_group_id]
   associate_public_ip_address = true
   key_name                    = var.ec2_key_name
-  user_data                   = data.template_file.relay_user_data.rendered
+  user_data = templatefile("${path.module}/templates/cloud_init_relay.sh", {
+    hostname_prefix  = "relay"
+    count            = "0"
+    private_dns_zone = "private"
+    eip              = aws_eip.cardano_node[0].id
+    eip_ip4          = aws_eip.cardano_node[0].public_ip
+    region           = data.aws_region.current.name
+    relay_node_port  = var.node_port
+    environment      = var.environment
+  })
 
   root_block_device {
     volume_size = var.relay_root_disk_size
