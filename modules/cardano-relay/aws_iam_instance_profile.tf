@@ -149,5 +149,12 @@ resource "aws_iam_role_policy_attachment" "relay_ssm_access" {
 resource "aws_iam_role_policy_attachment" "relay_eip_associate" {
   role       = aws_iam_role.relay_instance_role.name
   policy_arn = aws_iam_policy.relay_eip_associate_policy.arn
-  depends_on = [aws_iam_role.relay_ssm_role]
+  depends_on = [aws_iam_role.relay_instance_role]
+}
+
+
+resource "aws_iam_role_policy_attachment" "relay_autoscaling_associate" {
+  role       = aws_iam_role.relay_instance_role.name
+  policy_arn = aws_iam_policy.relay_autoscaling_associate_policy.arn
+  depends_on = [aws_iam_role.relay_instance_role]
 }

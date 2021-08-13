@@ -67,8 +67,20 @@ data "aws_iam_policy_document" "core_eip" {
     ]
 
     resources = [
-      "*"]
+    "*"]
     effect = "Allow"
+  }
+}
+
+data "aws_iam_policy_document" "core_autoscaling" {
+  statement {
+    actions = [
+      "autoscaling:DescribeAutoScalingGroups",
+      "ec2:DescribeInstances"
+    ]
+
+    resources = ["*"]
+    effect    = "Allow"
   }
 }
 
@@ -123,6 +135,12 @@ resource "aws_iam_policy" "core_eip_associate_policy" {
   policy      = data.aws_iam_policy_document.core_eip.json
 }
 
+resource "aws_iam_policy" "core_autoscaling_associate_policy" {
+  name        = "core-autoscaling-associate-policy"
+  description = "Allows the core server to interrogate autoscaling groups and instances"
+  policy      = data.aws_iam_policy_document.core_autoscaling.json
+}
+
 resource "aws_iam_role_policy_attachment" "core_ssm_access" {
   role       = aws_iam_role.core_instance_role.name
   policy_arn = aws_iam_policy.core_ssm_access_policy.arn
@@ -132,5 +150,11 @@ resource "aws_iam_role_policy_attachment" "core_ssm_access" {
 resource "aws_iam_role_policy_attachment" "core_eip_associate" {
   role       = aws_iam_role.core_instance_role.name
   policy_arn = aws_iam_policy.core_eip_associate_policy.arn
+  depends_on = [aws_iam_role.core_instance_role]
+}
+
+resource "aws_iam_role_policy_attachment" "core_autoscaling_associate" {
+  role       = aws_iam_role.core_instance_role.name
+  policy_arn = aws_iam_policy.core_autoscaling_associate_policy.arn
   depends_on = [aws_iam_role.core_instance_role]
 }
