@@ -6,7 +6,14 @@ resource "aws_launch_configuration" "core_launch_config" {
   security_groups             = [var.node_security_group_id]
   associate_public_ip_address = false
   key_name                    = var.ec2_key_name
-  user_data                   = data.template_file.core_user_data.rendered
+  user_data = templatefile("${path.module}/templates/cloud_init_core.sh", {
+    hostname_prefix  = "core"
+    count            = "0"
+    private_dns_zone = "private"
+    region           = data.aws_region.current.name
+    core_node_port   = var.node_port
+    environment      = var.environment
+  })
 
   root_block_device {
     volume_size = var.core_root_disk_size
