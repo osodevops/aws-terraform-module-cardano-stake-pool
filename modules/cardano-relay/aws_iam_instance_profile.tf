@@ -1,10 +1,10 @@
 resource "aws_iam_instance_profile" "relay_node_profile" {
-  name = "CARDANO-RELAY-PROFILE"
-  role = aws_iam_role.relay_ssm_role.name
+  name = "cardano-relay-node"
+  role = aws_iam_role.relay_instance_role.name
 }
 
-resource "aws_iam_role" "relay_ssm_role" {
-  name = "CARDANO-RELAY-IAM-ROLE-1"
+resource "aws_iam_role" "relay_instance_role" {
+  name        = "cardano-relay-node"
   description = "Allows EC2 instances to call AWS services like CloudWatch and SSM on your behalf."
 
   assume_role_policy = <<EOF
@@ -29,8 +29,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "s3policy" {
-  name = "CARDANO-RELAY-S3POLICY"
-  role = aws_iam_role.relay_ssm_role.id
+  name   = "cardano-relay-s3policy"
+  role   = aws_iam_role.relay_instance_role.id
   policy = <<EOF
 {
      "Version": "2012-10-17",
@@ -56,6 +56,7 @@ resource "aws_iam_role_policy" "s3policy" {
    }
 EOF
 }
+
 data "aws_iam_policy_document" "relay_eip" {
   statement {
     actions = [
@@ -65,9 +66,20 @@ data "aws_iam_policy_document" "relay_eip" {
       "kms:CreateGrant"
     ]
 
-    resources = [
-      "*"]
-    effect = "Allow"
+    resources = ["*"]
+    effect    = "Allow"
+  }
+}
+
+data "aws_iam_policy_document" "relay_autoscaling" {
+  statement {
+    actions = [
+      "autoscaling:DescribeAutoScalingGroups",
+      "ec2:DescribeInstances"
+    ]
+
+    resources = ["*"]
+    effect    = "Allow"
   }
 }
 
@@ -93,21 +105,21 @@ data "aws_iam_policy_document" "relay_ssm_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "ssm-attach" {
-  role       = aws_iam_role.relay_ssm_role.name
+  role       = aws_iam_role.relay_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
-  depends_on = [aws_iam_role.relay_ssm_role]
+  depends_on = [aws_iam_role.relay_instance_role]
 }
 
 resource "aws_iam_role_policy_attachment" "writetocloudwatch" {
-  role       = aws_iam_role.relay_ssm_role.name
+  role       = aws_iam_role.relay_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-  depends_on = [aws_iam_role.relay_ssm_role]
+  depends_on = [aws_iam_role.relay_instance_role]
 }
 
 resource "aws_iam_role_policy_attachment" "CloudWatchAgentServerPolicy" {
-  role       = aws_iam_role.relay_ssm_role.name
+  role       = aws_iam_role.relay_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-  depends_on = [aws_iam_role.relay_ssm_role]
+  depends_on = [aws_iam_role.relay_instance_role]
 }
 
 resource "aws_iam_policy" "relay_ssm_access_policy" {
@@ -122,14 +134,20 @@ resource "aws_iam_policy" "relay_eip_associate_policy" {
   policy      = data.aws_iam_policy_document.relay_eip.json
 }
 
+resource "aws_iam_policy" "relay_autoscaling_associate_policy" {
+  name        = "relay-autoscaling-associate-policy"
+  description = "Allows the Relay server to interrogate autoscaling groups and instances"
+  policy      = data.aws_iam_policy_document.relay_autoscaling.json
+}
+
 resource "aws_iam_role_policy_attachment" "relay_ssm_access" {
-  role       = aws_iam_role.relay_ssm_role.name
+  role       = aws_iam_role.relay_instance_role.name
   policy_arn = aws_iam_policy.relay_ssm_access_policy.arn
-  depends_on = [aws_iam_role.relay_ssm_role]
+  depends_on = [aws_iam_role.relay_instance_role]
 }
 
 resource "aws_iam_role_policy_attachment" "relay_eip_associate" {
-  role       = aws_iam_role.relay_ssm_role.name
+  role       = aws_iam_role.relay_instance_role.name
   policy_arn = aws_iam_policy.relay_eip_associate_policy.arn
   depends_on = [aws_iam_role.relay_ssm_role]
 }

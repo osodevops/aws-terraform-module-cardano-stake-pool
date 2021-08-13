@@ -1,5 +1,5 @@
-resource "aws_launch_configuration" "relay_launch_config" {
-  name_prefix                 = "${upper(var.environment)}-RELAY-NODE-ASG-"
+resource "aws_launch_configuration" "cardano_relay_node" {
+  name_prefix                 = "cardano-${var.environment}-relay-node-"
   image_id                    = data.aws_ami.cardano_node.id
   instance_type               = var.ec2_instance_type
   iam_instance_profile        = aws_iam_instance_profile.relay_node_profile.name
@@ -18,7 +18,7 @@ resource "aws_launch_configuration" "relay_launch_config" {
   })
 
   root_block_device {
-    volume_size = var.relay_root_disk_size
+    volume_size = var.node_root_disk_size
     volume_type = "gp2"
   }
 
@@ -28,9 +28,9 @@ resource "aws_launch_configuration" "relay_launch_config" {
   }
 }
 
-resource "aws_autoscaling_group" "rely_node" {
-  name                 = "${upper(var.environment)}-RELAY-NODE-ASG"
-  launch_configuration = aws_launch_configuration.relay_launch_config.name
+resource "aws_autoscaling_group" "relay_node" {
+  name                 = "cardano-${var.environment}-relay-nodes"
+  launch_configuration = aws_launch_configuration.cardano_relay_node.name
   vpc_zone_identifier  = data.aws_subnet_ids.public.ids
   min_size             = var.asg_min_size
   max_size             = var.asg_max_size

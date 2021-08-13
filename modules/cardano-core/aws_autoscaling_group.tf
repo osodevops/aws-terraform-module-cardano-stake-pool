@@ -1,5 +1,5 @@
-resource "aws_launch_configuration" "core_launch_config" {
-  name_prefix                 = "${upper(var.environment)}-CORE-NODE-ASG-"
+resource "aws_launch_configuration" "cardano_core_node" {
+  name_prefix                 = "cardano-${var.environment}-cire-node-"
   image_id                    = data.aws_ami.cardano_node.id
   instance_type               = var.ec2_instance_type
   iam_instance_profile        = aws_iam_instance_profile.core_node_profile.name
@@ -16,7 +16,7 @@ resource "aws_launch_configuration" "core_launch_config" {
   })
 
   root_block_device {
-    volume_size = var.core_root_disk_size
+    volume_size = var.node_root_disk_size
     volume_type = "gp2"
   }
 
@@ -27,8 +27,8 @@ resource "aws_launch_configuration" "core_launch_config" {
 }
 
 resource "aws_autoscaling_group" "core_node" {
-  name                 = "${upper(var.environment)}-CORE-NODE-ASG"
-  launch_configuration = aws_launch_configuration.core_launch_config.name
+  name                 = "cardano-${var.environment}-core-nodes"
+  launch_configuration = aws_launch_configuration.cardano_core_node.name
   vpc_zone_identifier  = data.aws_subnet_ids.private.ids
   min_size             = var.asg_min_size
   max_size             = var.asg_max_size

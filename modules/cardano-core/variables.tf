@@ -1,3 +1,7 @@
+variable "asg_min_size" {
+  default = 0
+}
+
 variable "ami_owner_account" {
   type = string
 }
@@ -17,6 +21,7 @@ variable "asg_desired_capacity" {
 variable "ec2_key_name" {
   type        = string
   description = "Set the EC2 Key name"
+  default     = ""
 }
 
 variable "ec2_instance_type" {
@@ -29,24 +34,19 @@ variable "environment" {
   type = string
 }
 
-variable "relay_nodes" {
-  type = map(string)
-}
-
 variable "common_tags" {
   type = map(string)
 }
 
-
-variable "core_node_port" {
+variable "node_port" {
   description = "External port number to run core node on."
-  type = string
+  type        = string
 }
 
-variable "core_root_disk_size" {
+variable "node_root_disk_size" {
   description = "Size of the root volume in GB's"
-  type = number
-  default = 40
+  type        = number
+  default     = 40
 }
 
 variable "vpc_name" {
