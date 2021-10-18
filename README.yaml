@@ -1,0 +1,44 @@
+---
+#
+# This is the canonical configuration for the `README.md`
+# Run `make readme` to rebuild the `README.md`
+#
+
+# Name of this project
+name: ""
+
+# Short description of this project
+description: |-
+  Add here
+
+# Canonical GitHub repo
+github_repo: osodevops/some-repo
+
+# How to use this project
+usage: |-
+  ### Requirements
+  None.
+
+  ### Role Variables
+  Some information
+  ```yaml
+    ---
+  ```
+
+# Example usage
+examples: |-
+  Follow this example
+  ```yaml
+      ---
+  ```
+
+related:
+  - name: ""
+    description: ""
+    url: "https://github.com/osodevops/"
+
+# References
+references:
+  - name: ""
+    description: ""
+    url: "https://"
