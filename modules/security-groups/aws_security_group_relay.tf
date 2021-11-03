@@ -14,7 +14,7 @@ resource "aws_security_group_rule" "relay_ingress_public" {
   to_port   = var.relay_node_port
   protocol  = "TCP"
   # todo: change to 0/0
-  cidr_blocks       = ["143.159.32.113/32"]
+  cidr_blocks       = ["0.0.0.0"]
   security_group_id = aws_security_group.relay.id
   description       = "External traffic to relay port"
 }
