@@ -1,10 +1,10 @@
 resource "aws_iam_instance_profile" "core_node_profile" {
-  name = "CARDANO-CORE-PROFILE"
-  role = aws_iam_role.core_ssm_role.name
+  name = "cardano-core-node"
+  role = aws_iam_role.core_instance_role.name
 }
 
-resource "aws_iam_role" "core_ssm_role" {
-  name = "CARDANO-CORE-IAM-ROLE-1"
+resource "aws_iam_role" "core_instance_role" {
+  name        = "cardano-core-node"
   description = "Allows EC2 instances to call AWS services like CloudWatch and SSM on your behalf."
 
   assume_role_policy = <<EOF
@@ -29,8 +29,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "s3policy" {
-  name = "CARDANO-CORE-S3POLICY"
-  role = aws_iam_role.core_ssm_role.id
+  name   = "cardano-core-s3policy"
+  role   = aws_iam_role.core_instance_role.id
   policy = <<EOF
 {
      "Version": "2012-10-17",
@@ -56,6 +56,7 @@ resource "aws_iam_role_policy" "s3policy" {
    }
 EOF
 }
+
 data "aws_iam_policy_document" "core_eip" {
   statement {
     actions = [
@@ -66,8 +67,20 @@ data "aws_iam_policy_document" "core_eip" {
     ]
 
     resources = [
-      "*"]
+    "*"]
     effect = "Allow"
+  }
+}
+
+data "aws_iam_policy_document" "core_autoscaling" {
+  statement {
+    actions = [
+      "autoscaling:DescribeAutoScalingGroups",
+      "ec2:DescribeInstances"
+    ]
+
+    resources = ["*"]
+    effect    = "Allow"
   }
 }
 
@@ -93,21 +106,21 @@ data "aws_iam_policy_document" "core_ssm_access" {
 }
 
 resource "aws_iam_role_policy_attachment" "ssm-attach" {
-  role       = aws_iam_role.core_ssm_role.name
+  role       = aws_iam_role.core_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
-  depends_on = [aws_iam_role.core_ssm_role]
+  depends_on = [aws_iam_role.core_instance_role]
 }
 
 resource "aws_iam_role_policy_attachment" "writetocloudwatch" {
-  role       = aws_iam_role.core_ssm_role.name
+  role       = aws_iam_role.core_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
-  depends_on = [aws_iam_role.core_ssm_role]
+  depends_on = [aws_iam_role.core_instance_role]
 }
 
 resource "aws_iam_role_policy_attachment" "CloudWatchAgentServerPolicy" {
-  role       = aws_iam_role.core_ssm_role.name
+  role       = aws_iam_role.core_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-  depends_on = [aws_iam_role.core_ssm_role]
+  depends_on = [aws_iam_role.core_instance_role]
 }
 
 resource "aws_iam_policy" "core_ssm_access_policy" {
@@ -122,14 +135,26 @@ resource "aws_iam_policy" "core_eip_associate_policy" {
   policy      = data.aws_iam_policy_document.core_eip.json
 }
 
+resource "aws_iam_policy" "core_autoscaling_associate_policy" {
+  name        = "core-autoscaling-associate-policy"
+  description = "Allows the core server to interrogate autoscaling groups and instances"
+  policy      = data.aws_iam_policy_document.core_autoscaling.json
+}
+
 resource "aws_iam_role_policy_attachment" "core_ssm_access" {
-  role       = aws_iam_role.core_ssm_role.name
+  role       = aws_iam_role.core_instance_role.name
   policy_arn = aws_iam_policy.core_ssm_access_policy.arn
-  depends_on = [aws_iam_role.core_ssm_role]
+  depends_on = [aws_iam_role.core_instance_role]
 }
 
 resource "aws_iam_role_policy_attachment" "core_eip_associate" {
-  role       = aws_iam_role.core_ssm_role.name
+  role       = aws_iam_role.core_instance_role.name
   policy_arn = aws_iam_policy.core_eip_associate_policy.arn
-  depends_on = [aws_iam_role.core_ssm_role]
+  depends_on = [aws_iam_role.core_instance_role]
+}
+
+resource "aws_iam_role_policy_attachment" "core_autoscaling_associate" {
+  role       = aws_iam_role.core_instance_role.name
+  policy_arn = aws_iam_policy.core_autoscaling_associate_policy.arn
+  depends_on = [aws_iam_role.core_instance_role]
 }

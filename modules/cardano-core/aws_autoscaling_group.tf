@@ -1,15 +1,22 @@
-resource "aws_launch_configuration" "core_launch_config" {
-  name_prefix                 = "${upper(var.environment)}-CORE-NODE-ASG-"
+resource "aws_launch_configuration" "cardano_core_node" {
+  name_prefix                 = "cardano-${var.environment}-cire-node-"
   image_id                    = data.aws_ami.cardano_node.id
   instance_type               = var.ec2_instance_type
   iam_instance_profile        = aws_iam_instance_profile.core_node_profile.name
-  security_groups             = [aws_security_group.core_sg.id]
+  security_groups             = [var.node_security_group_id]
   associate_public_ip_address = false
   key_name                    = var.ec2_key_name
-  user_data                   = data.template_file.core_user_data.rendered
+  user_data = templatefile("${path.module}/templates/cloud_init_core.sh", {
+    hostname_prefix  = "core"
+    count            = "0"
+    private_dns_zone = "private"
+    region           = data.aws_region.current.name
+    core_node_port   = var.node_port
+    environment      = var.environment
+  })
 
   root_block_device {
-    volume_size = var.core_root_disk_size
+    volume_size = var.node_root_disk_size
     volume_type = "gp2"
   }
 
@@ -20,8 +27,8 @@ resource "aws_launch_configuration" "core_launch_config" {
 }
 
 resource "aws_autoscaling_group" "core_node" {
-  name                 = "${upper(var.environment)}-CORE-NODE-ASG"
-  launch_configuration = aws_launch_configuration.core_launch_config.name
+  name                 = "cardano-${var.environment}-core-nodes"
+  launch_configuration = aws_launch_configuration.cardano_core_node.name
   vpc_zone_identifier  = data.aws_subnet_ids.private.ids
   min_size             = var.asg_min_size
   max_size             = var.asg_max_size
@@ -31,8 +38,12 @@ resource "aws_autoscaling_group" "core_node" {
     create_before_destroy = true
   }
 
-  tags = flatten(["${data.null_data_source.asg_tags.*.outputs}",
-    map("key", "Name", "value", "${upper(var.environment)}-CORE-NODE-EC2-ASG", "propagate_at_launch", true),
-    map("key", "AWSInspectorEnabled", "value", "true", "propagate_at_launch", true)
+  tags = concat(
+    null_resource.asg_tags.*.triggers,
+    [
+      { key : "Name", value : "cardano-${var.environment}-core-node", propagate_at_launch : true },
+      { key : "Environment", value : var.environment, propagate_at_launch : true },
+      { key : "Node", value : "core", propagate_at_launch : true },
+      { key : "AWSInspectorEnabled", value : "true", propagate_at_launch : true }
   ])
 }

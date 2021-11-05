@@ -8,7 +8,8 @@
     "packer_build_vpc_id": "{{env `PACKER_BUILD_VPC_ID`}}",
     "packer_build_subnet_id": "{{env `PACKER_BUILD_SUBNET_ID`}}",
     "ec2_instance_type": "{{env `EC2_INSTANCE_TYPE`}}",
-    "root_volume_size": "{{env `root_volume_size`}}"
+    "root_volume_size": "{{env `root_volume_size`}}",
+    "region": "{{env `AWS_REGION`}}"
   },
   "builders": [
     {
@@ -16,7 +17,7 @@
       "access_key": "{{user `aws_access_key`}}",
       "secret_key": "{{user `aws_secret_key`}}",
       "token": "{{user `aws_session_token`}}",
-      "region": "eu-central-1",
+      "region": "{{user `region`}}",
       "instance_type": "{{user `ec2_instance_type`}}",
       "ami_name": "CARDANO-NODE-{{timestamp}}-AMI",
       "ami_description": "Cardano Node AMI",

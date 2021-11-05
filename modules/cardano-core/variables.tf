@@ -1,9 +1,11 @@
-variable "ami_owner_account" {
-  type = string
+variable "asg_min_size" {
+  default = 0
 }
 
-variable "asg_min_size" {
-  default = 1
+variable "ami_owner_account" {
+  description = "Account owning the cardano ami"
+  type        = string
+  default     = ""
 }
 
 variable "asg_max_size" {
@@ -17,6 +19,7 @@ variable "asg_desired_capacity" {
 variable "ec2_key_name" {
   type        = string
   description = "Set the EC2 Key name"
+  default     = ""
 }
 
 variable "ec2_instance_type" {
@@ -29,28 +32,34 @@ variable "environment" {
   type = string
 }
 
-variable "relay_nodes" {
-  type = map(string)
-}
-
 variable "common_tags" {
   type = map(string)
 }
 
-
-variable "core_node_port" {
+variable "node_port" {
   description = "External port number to run core node on."
-  type = string
+  type        = string
 }
 
-variable "core_root_disk_size" {
+variable "node_root_disk_size" {
   description = "Size of the root volume in GB's"
-  type = number
-  default = 40
+  type        = number
+  default     = 40
+}
+
+variable "vpc_name" {
+  description = "Name of the VPC we are deploying to"
+  type        = string
+}
+
+variable "node_security_group_id" {
+  description = "ID of the SG defined by the security-groups module"
+  type        = string
 }
 
 locals {
-  log_path          = "/opt/cardano/cnode/logs"
-  parameter_prefix  = "/${var.environment}"
-  ami_name          = "CARDANO-NODE-*"
+  log_path         = "/opt/cardano/cnode/logs"
+  parameter_prefix = "/${var.environment}"
+  ami_name         = "CARDANO-NODE-*"
+  ami_owner        = var.ami_owner_account != "" ? var.ami_owner_account : data.aws_caller_identity.current.account_id
 }
